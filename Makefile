@@ -32,3 +32,6 @@ install: build
 test: 
 	go test -i $(TEST) || exit 1                                                   
 	echo $(TEST) | TF_ACC=1 xargs -t -n4 go test $(TESTARGS) -timeout=120m -parallel=4
+
+docs:
+	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
