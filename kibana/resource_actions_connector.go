@@ -143,14 +143,14 @@ func resourceActionsConnectorUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceActionsConnectorDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics // Warning or errors can be collected in a slice type
-	// c := m.(*hc.Client)
+	c := m.(*gk.Client)
 
-	// orderID := d.Id()
+	connectorID := d.Id()
 
-	// err := c.DeleteOrder(orderID)
-	// if err != nil {
-	// 	return diag.FromErr(err)
-	// }
+	err := c.DeleteConnector(connectorID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	// d.SetId("") is automatically called assuming delete returns no errors, but
 	// it is added here for explicitness.
