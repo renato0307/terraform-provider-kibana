@@ -1,0 +1,4 @@
+kibana_password = "FILLME"
+kibana_space    = "FILLME"
+kibana_url      = "FILLME"
+kibana_username = "FILLME"

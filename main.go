@@ -1,9 +1,9 @@
 package main
 
 import (
-	"./kibana"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
+	"github.com/renato0307/terraform-provider-kibana/kibana"
 )
 
 func main() {

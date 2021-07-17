@@ -1,4 +1,4 @@
-package kibanaalarms
+package kibana
 
 import (
 	"context"
@@ -8,30 +8,36 @@ import (
 	gk "github.com/renato0307/go-kibana/kibana"
 )
 
-// Provider -
+// Provider - Kibana Terraform provider definition
 func Provider() *schema.Provider {
 	return &schema.Provider{
-		// Schema: map[string]*schema.Schema{
-		// 	"host": &schema.Schema{
-		// 		Type:        schema.TypeString,
-		// 		Optional:    true,
-		// 		DefaultFunc: schema.EnvDefaultFunc("HASHICUPS_HOST", nil),
-		// 	},
-		// 	"username": &schema.Schema{
-		// 		Type:        schema.TypeString,
-		// 		Optional:    true,
-		// 		DefaultFunc: schema.EnvDefaultFunc("HASHICUPS_USERNAME", nil),
-		// 	},
-		// 	"password": &schema.Schema{
-		// 		Type:        schema.TypeString,
-		// 		Optional:    true,
-		// 		Sensitive:   true,
-		// 		DefaultFunc: schema.EnvDefaultFunc("HASHICUPS_PASSWORD", nil),
-		// 	},
-		// },
-		// ResourcesMap: map[string]*schema.Resource{
-		// 	"hashicups_order": resourceOrder(),
-		// },
+		Schema: map[string]*schema.Schema{
+			"host": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("KIBANA_HOST", nil),
+			},
+			"username": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("KIBANA_USERNAME", nil),
+			},
+			"password": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				DefaultFunc: schema.EnvDefaultFunc("KIBANA_PASSWORD", nil),
+			},
+			"space": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				DefaultFunc: schema.EnvDefaultFunc("SPACE_PASSWORD", nil),
+			},
+		},
+		ResourcesMap: map[string]*schema.Resource{
+			"kibana_actions_connector": resourceActionsConnector(),
+		},
 		// DataSourcesMap: map[string]*schema.Resource{
 		// 	"hashicups_coffees":     dataSourceCoffees(),
 		// 	"hashicups_ingredients": dataSourceIngredients(),
@@ -45,39 +51,15 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
 	space := d.Get("space").(string)
+	host := d.Get("host").(string)
 
-	var host *string
-
-	hVal, ok := d.GetOk("host")
-	if ok {
-		tempHost := hVal.(string)
-		host = &tempHost
-	}
-
-	// Warning or errors can be collected in a slice type
-	var diags diag.Diagnostics
-
-	if (username != "") && (password != "") {
-		c, err := gk.NewClient(&host, &username, &password, &space)
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Unable to create HashiCups client",
-				Detail:   "Unable to authenticate user for authenticated HashiCups client",
-			})
-
-			return nil, diags
-		}
-
-		return c, diags
-	}
-
-	c, err := hashicups.NewClient(host, nil, nil)
+	var diags diag.Diagnostics // Warning or errors can be collected in a slice type
+	c, err := gk.NewClient(&host, &username, &password, &space)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to create HashiCups client",
-			Detail:   "Unable to create anonymous HashiCups client",
+			Summary:  "Unable to create Kibana client",
+			Detail:   "Unable to create Kibana client with basic authentication",
 		})
 		return nil, diags
 	}
