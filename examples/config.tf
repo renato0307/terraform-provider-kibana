@@ -2,7 +2,7 @@ terraform {
   required_providers {
     kibana = {
       source  = "renatoalvestorres.net/terraform/kibana"
-      version = ">= 1.0.3"
+      version = ">= 0.0.1"
     }
   }
 }
