@@ -1,4 +1,4 @@
-package kibana
+package utils
 
 import (
 	"bytes"
