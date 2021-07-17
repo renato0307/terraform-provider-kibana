@@ -2,6 +2,7 @@ package kibana
 
 import (
 	"context"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -107,36 +108,24 @@ func resourceActionsConnectorRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceActionsConnectorUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// c := m.(*hc.Client)
+	c := m.(*gk.Client)
 
-	// orderID := d.Id()
+	connectorID := d.Id()
+	connector := gk.UpdateConnector{
+		Name: d.Get("name").(string),
+		Config: gk.ConnectorConfig{
+			ExecutionTimeField: d.Get("config_execution_time_field").(string),
+			Index:              d.Get("config_index").(string),
+			Refresh:            d.Get("config_refresh").(bool),
+		},
+	}
 
-	// if d.HasChange("items") {
-	// 	items := d.Get("items").([]interface{})
-	// 	ois := []hc.OrderItem{}
+	_, err := c.UpdateConnector(connectorID, connector)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	// 	for _, item := range items {
-	// 		i := item.(map[string]interface{})
-
-	// 		co := i["coffee"].([]interface{})[0]
-	// 		coffee := co.(map[string]interface{})
-
-	// 		oi := hc.OrderItem{
-	// 			Coffee: hc.Coffee{
-	// 				ID: coffee["id"].(int),
-	// 			},
-	// 			Quantity: i["quantity"].(int),
-	// 		}
-	// 		ois = append(ois, oi)
-	// 	}
-
-	// 	_, err := c.UpdateOrder(orderID, ois)
-	// 	if err != nil {
-	// 		return diag.FromErr(err)
-	// 	}
-
-	// 	d.Set("last_updated", time.Now().Format(time.RFC850))
-	// }
+	d.Set("last_updated", time.Now().Format(time.RFC850))
 
 	return resourceActionsConnectorRead(ctx, d, m)
 }
