@@ -1,10 +1,10 @@
 TEST?=$$(go list ./... | grep -v 'vendor')
-HOSTNAME=outsystems.com
-NAMESPACE=edu
-NAME=kibana-alarms
+HOSTNAME=renatoalvestorres.net
+NAMESPACE=terraform
+NAME=kibana
 BINARY=terraform-provider-${NAME}
-VERSION=0.1
-OS_ARCH=darwin_amd64
+VERSION=1.0.3
+OS_ARCH=linux_amd64
 
 default: install
 
@@ -31,7 +31,4 @@ install: build
 
 test: 
 	go test -i $(TEST) || exit 1                                                   
-	echo $(TEST) | xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4                    
-
-testacc: 
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m   
+	echo $(TEST) | TF_ACC=1 xargs -t -n4 go test $(TESTARGS) -timeout=120m -parallel=4
