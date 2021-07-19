@@ -63,7 +63,7 @@ resource "kibana_alerting_rule" "sample_rule" {
       }
     }
   )
-  param_index                = ["phoenix-orchestration-metrics-$workspace*"]
+  param_index                = ["my-index*"]
   param_size                 = 1
   param_threshold            = [1]
   param_threshold_comparator = ">"
