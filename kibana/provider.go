@@ -37,6 +37,7 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"kibana_actions_connector": resourceActionsConnector(),
+			"kibana_alerting_rule":     resourceAlertingRule(),
 		},
 		// DataSourcesMap: map[string]*schema.Resource{
 		// 	"hashicups_coffees":     dataSourceCoffees(),
