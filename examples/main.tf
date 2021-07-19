@@ -1,10 +1,28 @@
 
 resource "kibana_actions_connector" "sample_connector" {
-  config_execution_time_field = null
-  config_index                = "test_connector_created_with_custom_provider_index"
-  config_refresh              = true
-  connector_type_id           = ".index"
-  name                        = "test_connector_created_with_custom_provider"
+  connector_type_id = ".index"
+  name              = "test_connector_created_with_custom_provider"
+
+  config = jsonencode(
+    {
+      "index" : "test-index",
+      "refresh" : true
+      "executionTimeField" : null
+    }
+  )
+}
+
+resource "kibana_actions_connector" "sample_connector_slack" {
+  connector_type_id = ".slack"
+  name              = "test_connector_created_with_custom_provider_for_slack"
+
+  config = jsonencode({})
+
+  secrets = jsonencode(
+    {
+      "webhookUrl" : "https://abcd.com",
+    }
+  )
 }
 
 resource "kibana_alerting_rule" "sample_rule" {
@@ -74,3 +92,4 @@ resource "kibana_alerting_rule" "sample_rule" {
   schedule_interval          = "5m"
   tags                       = ["tag1", "tag2", "tag3"]
 }
+

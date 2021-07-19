@@ -2,6 +2,8 @@ package kibana
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -41,20 +43,16 @@ func resourceActionsConnector() *schema.Resource {
 				Optional: true,
 				Computed: false,
 			},
-			"config_execution_time_field": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: false,
-			},
-			"config_index": {
+			"config": {
 				Type:     schema.TypeString,
 				Required: true,
 				Computed: false,
 			},
-			"config_refresh": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: false,
+			"secrets": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Computed:  false,
+				Sensitive: true,
 			},
 		},
 	}
@@ -67,11 +65,28 @@ func resourceActionsConnectorCreate(ctx context.Context, d *schema.ResourceData,
 	connector := gk.CreateConnector{
 		Name:            d.Get("name").(string),
 		ConnectorTypeId: d.Get("connector_type_id").(string),
-		Config: gk.ConnectorConfig{
-			ExecutionTimeField: d.Get("config_execution_time_field").(string),
-			Index:              d.Get("config_index").(string),
-			Refresh:            d.Get("config_refresh").(bool),
-		},
+	}
+
+	log.Printf("Unmarshalling config: %s", d.Get("config").(string))
+	var config map[string]interface{}
+	configValue, ok := d.GetOk("config")
+	if ok {
+		err := json.Unmarshal([]byte(configValue.(string)), &config)
+		connector.Config = config
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	log.Printf("Unmarshalling secrets: %s", d.Get("secrets").(string))
+	var secrets map[string]interface{}
+	secretsValue, ok := d.GetOk("secrets")
+	if ok {
+		err := json.Unmarshal([]byte(secretsValue.(string)), &secrets)
+		connector.Secrets = secrets
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	newConnector, err := c.CreateConnector(connector)
@@ -100,9 +115,22 @@ func resourceActionsConnectorRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("connector_type_id", connector.ConnectorTypeId)
 	d.Set("is_preconfigured", connector.IsPreconfigured)
 	d.Set("is_missing_secrets", connector.IsMissingSecrets)
-	d.Set("config_execution_time_field", connector.Config.ExecutionTimeField)
-	d.Set("config_index", connector.Config.Index)
-	d.Set("config_refresh", connector.Config.Refresh)
+
+	if connector.Config != nil {
+		configValue, err := json.Marshal(connector.Config)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		d.Set("config", string(configValue))
+	}
+
+	if connector.Secrets != nil {
+		secretsValue, err := json.Marshal(connector.Secrets)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		d.Set("secrets", string(secretsValue))
+	}
 
 	return diags
 }
@@ -110,16 +138,33 @@ func resourceActionsConnectorRead(ctx context.Context, d *schema.ResourceData, m
 func resourceActionsConnectorUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*gk.Client)
 
-	connectorID := d.Id()
 	connector := gk.UpdateConnector{
 		Name: d.Get("name").(string),
-		Config: gk.ConnectorConfig{
-			ExecutionTimeField: d.Get("config_execution_time_field").(string),
-			Index:              d.Get("config_index").(string),
-			Refresh:            d.Get("config_refresh").(bool),
-		},
 	}
 
+	log.Printf("Unmarshalling config: %s", d.Get("config").(string))
+	var config map[string]interface{}
+	configValue, ok := d.GetOk("config")
+	if ok {
+		err := json.Unmarshal([]byte(configValue.(string)), &config)
+		connector.Config = config
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	log.Printf("Unmarshalling secrets: %s", d.Get("secrets").(string))
+	var secrets map[string]interface{}
+	secretsValue, ok := d.GetOk("secrets")
+	if ok {
+		err := json.Unmarshal([]byte(secretsValue.(string)), &secrets)
+		connector.Secrets = secrets
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	connectorID := d.Id()
 	_, err := c.UpdateConnector(connectorID, connector)
 	if err != nil {
 		return diag.FromErr(err)
