@@ -17,7 +17,7 @@ func resourceAlertingRule() *schema.Resource {
 		UpdateContext: resourceAlertingRuleUpdate,
 		DeleteContext: resourceAlertingRuleDelete,
 		Schema: map[string]*schema.Schema{
-			"actions": {
+			"action": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Computed: false,
@@ -115,6 +115,10 @@ func resourceAlertingRule() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"param_size": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"param_term_field": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -129,6 +133,10 @@ func resourceAlertingRule() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeInt,
 				},
+			},
+			"param_threshold_comparator": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"param_time_field": {
 				Type:     schema.TypeString,
@@ -183,7 +191,7 @@ func resourceAlertingRuleCreate(ctx context.Context, d *schema.ResourceData, m i
 
 	// sets rule actions
 	actions := []gk.RuleAction{}
-	if v, ok := d.GetOk("actions"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("action"); ok && v.(*schema.Set).Len() > 0 {
 		for _, v := range v.(*schema.Set).List() {
 			v := v.(map[string]interface{})
 			var b map[string]interface{}
@@ -197,6 +205,24 @@ func resourceAlertingRuleCreate(ctx context.Context, d *schema.ResourceData, m i
 		}
 	}
 
+	// sets the Params.Index
+	var paramsIndexSlice []string
+	for _, param := range d.Get("param_index").([]interface{}) {
+		paramsIndexSlice = append(paramsIndexSlice, param.(string))
+	}
+
+	// sets the Params.Threshold
+	var paramsThresholdSlice []int
+	for _, param := range d.Get("param_threshold").([]interface{}) {
+		paramsThresholdSlice = append(paramsThresholdSlice, param.(int))
+	}
+
+	// sets the Tags
+	var tagsSlice []string
+	for _, param := range d.Get("tags").([]interface{}) {
+		tagsSlice = append(tagsSlice, param.(string))
+	}
+
 	// sets the rest of the fields for the rule
 	rule := gk.CreateRule{
 		Actions:    actions,
@@ -204,23 +230,23 @@ func resourceAlertingRuleCreate(ctx context.Context, d *schema.ResourceData, m i
 		Name:       d.Get("name").(string),
 		NotifyWhen: d.Get("notify_when").(string),
 		Params: gk.RuleParams{
-			AggField:            d.Get("agg_field").(string),
-			AggType:             d.Get("agg_type").(string),
-			ESQuery:             d.Get("es_query").(string),
-			GroupBy:             d.Get("group_by").(string),
-			Index:               d.Get("index").([]string),
-			Size:                d.Get("size").(int),
-			TermField:           d.Get("term_field").(string),
-			TermSize:            d.Get("term_size").(int),
-			Threshold:           d.Get("threshold").([]int),
-			ThresholdComparator: d.Get("threshold_comparator").(string),
-			TimeField:           d.Get("time_field").(string),
-			TimeWindowSize:      d.Get("term_windows_size").(int),
-			TimeWindowUnit:      d.Get("term_windows_unit").(string),
+			AggField:            d.Get("param_agg_field").(string),
+			AggType:             d.Get("param_agg_type").(string),
+			ESQuery:             d.Get("param_es_query").(string),
+			GroupBy:             d.Get("param_group_by").(string),
+			Index:               paramsIndexSlice,
+			Size:                d.Get("param_size").(int),
+			TermField:           d.Get("param_term_field").(string),
+			TermSize:            d.Get("param_term_size").(int),
+			Threshold:           paramsThresholdSlice,
+			ThresholdComparator: d.Get("param_threshold_comparator").(string),
+			TimeField:           d.Get("param_time_field").(string),
+			TimeWindowSize:      d.Get("param_time_window_size").(int),
+			TimeWindowUnit:      d.Get("param_time_window_unit").(string),
 		},
 		RuleTypeID: d.Get("rule_type_id").(string),
 		Schedule:   gk.RuleSchedule{Interval: d.Get("schedule_interval").(string)},
-		Tags:       d.Get("tags").([]string),
+		Tags:       tagsSlice,
 	}
 
 	// calls API to create the rule
@@ -247,6 +273,7 @@ func resourceAlertingRuleRead(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
+	d.Set("actions", rule.Actions)
 	d.Set("api_key_owner", rule.ApiKeyOwner)
 	d.Set("consumer", rule.Consumer)
 	d.Set("created_at", rule.CreatedAt)
@@ -284,23 +311,76 @@ func resourceAlertingRuleRead(ctx context.Context, d *schema.ResourceData, m int
 func resourceAlertingRuleUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*gk.Client)
 
-	connectorID := d.Id()
-	connector := gk.UpdateConnector{
-		Name: d.Get("name").(string),
-		Config: gk.ConnectorConfig{
-			ExecutionTimeField: d.Get("config_execution_time_field").(string),
-			Index:              d.Get("config_index").(string),
-			Refresh:            d.Get("config_refresh").(bool),
-		},
+	ruleID := d.Id()
+
+	// sets rule actions
+	actions := []gk.RuleAction{}
+	if v, ok := d.GetOk("action"); ok && v.(*schema.Set).Len() > 0 {
+		for _, v := range v.(*schema.Set).List() {
+			v := v.(map[string]interface{})
+			var b map[string]interface{}
+			json.Unmarshal([]byte(v["params"].(string)), &b)
+			action := gk.RuleAction{
+				ID:     v["id"].(string),
+				Group:  v["group"].(string),
+				Params: b,
+			}
+			actions = append(actions, action)
+		}
 	}
 
-	_, err := c.UpdateConnector(connectorID, connector)
+	// sets the Params.Index
+	var paramsIndexSlice []string
+	for _, param := range d.Get("param_index").([]interface{}) {
+		paramsIndexSlice = append(paramsIndexSlice, param.(string))
+	}
+
+	// sets the Params.Threshold
+	var paramsThresholdSlice []int
+	for _, param := range d.Get("param_threshold").([]interface{}) {
+		paramsThresholdSlice = append(paramsThresholdSlice, param.(int))
+	}
+
+	// sets the Tags
+	var tagsSlice []string
+	for _, param := range d.Get("tags").([]interface{}) {
+		tagsSlice = append(tagsSlice, param.(string))
+	}
+
+	// sets the rest of the fields for the rule
+	rule := gk.UpdateRule{
+		Actions:    actions,
+		Name:       d.Get("name").(string),
+		NotifyWhen: d.Get("notify_when").(string),
+		Params: gk.RuleParams{
+			AggField:            d.Get("param_agg_field").(string),
+			AggType:             d.Get("param_agg_type").(string),
+			ESQuery:             d.Get("param_es_query").(string),
+			GroupBy:             d.Get("param_group_by").(string),
+			Index:               paramsIndexSlice,
+			Size:                d.Get("param_size").(int),
+			TermField:           d.Get("param_term_field").(string),
+			TermSize:            d.Get("param_term_size").(int),
+			Threshold:           paramsThresholdSlice,
+			ThresholdComparator: d.Get("param_threshold_comparator").(string),
+			TimeField:           d.Get("param_time_field").(string),
+			TimeWindowSize:      d.Get("param_time_window_size").(int),
+			TimeWindowUnit:      d.Get("param_time_window_unit").(string),
+		},
+		Throttle: d.Get("throttle").(string),
+		Schedule: gk.RuleSchedule{Interval: d.Get("schedule_interval").(string)},
+		Tags:     tagsSlice,
+	}
+
+	// calls API to update the rule
+	updatedRule, err := c.UpdateRule(ruleID, rule)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
+	d.SetId(updatedRule.ID)
 	d.Set("last_updated", time.Now().Format(time.RFC850))
 
+	// reads the updated rule and returns
 	return resourceAlertingRuleRead(ctx, d, m)
 }
 
@@ -308,9 +388,9 @@ func resourceAlertingRuleDelete(ctx context.Context, d *schema.ResourceData, m i
 	var diags diag.Diagnostics // Warning or errors can be collected in a slice type
 	c := m.(*gk.Client)
 
-	connectorID := d.Id()
+	ruleID := d.Id()
 
-	err := c.DeleteConnector(connectorID)
+	err := c.DeleteRule(ruleID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
