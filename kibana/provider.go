@@ -48,7 +48,7 @@ func Provider() *schema.Provider {
 	}
 }
 
-func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+func providerConfigure(_ context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
 	space := d.Get("space").(string)

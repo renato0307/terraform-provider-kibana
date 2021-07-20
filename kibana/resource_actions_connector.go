@@ -100,7 +100,7 @@ func resourceActionsConnectorCreate(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceActionsConnectorRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceActionsConnectorRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics // Warning or errors can be collected in a slice type
 	c := m.(*gk.Client)
 
@@ -111,17 +111,17 @@ func resourceActionsConnectorRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	d.Set("name", connector.Name)
-	d.Set("connector_type_id", connector.ConnectorTypeId)
-	d.Set("is_preconfigured", connector.IsPreconfigured)
-	d.Set("is_missing_secrets", connector.IsMissingSecrets)
+	_ = d.Set("name", connector.Name)
+	_ = d.Set("connector_type_id", connector.ConnectorTypeId)
+	_ = d.Set("is_preconfigured", connector.IsPreconfigured)
+	_ = d.Set("is_missing_secrets", connector.IsMissingSecrets)
 
 	if connector.Config != nil {
 		configValue, err := json.Marshal(connector.Config)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		d.Set("config", string(configValue))
+		_ = d.Set("config", string(configValue))
 	}
 
 	if connector.Secrets != nil {
@@ -129,7 +129,7 @@ func resourceActionsConnectorRead(ctx context.Context, d *schema.ResourceData, m
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		d.Set("secrets", string(secretsValue))
+		_ = d.Set("secrets", string(secretsValue))
 	}
 
 	return diags
@@ -170,12 +170,12 @@ func resourceActionsConnectorUpdate(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
-	d.Set("last_updated", time.Now().Format(time.RFC850))
+	_ = d.Set("last_updated", time.Now().Format(time.RFC850))
 
 	return resourceActionsConnectorRead(ctx, d, m)
 }
 
-func resourceActionsConnectorDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceActionsConnectorDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics // Warning or errors can be collected in a slice type
 	c := m.(*gk.Client)
 

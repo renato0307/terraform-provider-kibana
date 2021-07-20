@@ -190,12 +190,15 @@ func resourceAlertingRuleCreate(ctx context.Context, d *schema.ResourceData, m i
 	c := m.(*gk.Client)
 
 	// sets rule actions
-	actions := []gk.RuleAction{}
+	var actions []gk.RuleAction
 	if v, ok := d.GetOk("action"); ok && v.(*schema.Set).Len() > 0 {
 		for _, v := range v.(*schema.Set).List() {
 			v := v.(map[string]interface{})
 			var b map[string]interface{}
-			json.Unmarshal([]byte(v["params"].(string)), &b)
+			err := json.Unmarshal([]byte(v["params"].(string)), &b)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 			action := gk.RuleAction{
 				ID:     v["id"].(string),
 				Group:  v["group"].(string),
@@ -262,7 +265,7 @@ func resourceAlertingRuleCreate(ctx context.Context, d *schema.ResourceData, m i
 	return diags
 }
 
-func resourceAlertingRuleRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAlertingRuleRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics // Warning or errors can be collected in a slice type
 	c := m.(*gk.Client)
 
@@ -273,37 +276,37 @@ func resourceAlertingRuleRead(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
-	d.Set("actions", rule.Actions)
-	d.Set("api_key_owner", rule.ApiKeyOwner)
-	d.Set("consumer", rule.Consumer)
-	d.Set("created_at", rule.CreatedAt)
-	d.Set("created_by", rule.CreatedBy)
-	d.Set("enabled", rule.Enabled)
-	d.Set("last_execution_date", rule.ExecutionStatus.LastExecutionDate)
-	d.Set("last_execution_status", rule.ExecutionStatus.Status)
-	d.Set("id", rule.ID)
-	d.Set("mute_all", rule.MuteAll)
-	d.Set("muted_alert_ids", rule.MutedAlertIDs)
-	d.Set("name", rule.Name)
-	d.Set("notify_when", rule.NotifyWhen)
-	d.Set("param_agg_field", rule.Params.AggField)
-	d.Set("param_agg_type", rule.Params.AggType)
-	d.Set("param_es_query", rule.Params.ESQuery)
-	d.Set("param_group_by", rule.Params.GroupBy)
-	d.Set("param_index", rule.Params.Index)
-	d.Set("param_term_field", rule.Params.TermField)
-	d.Set("param_term_size", rule.Params.TermSize)
-	d.Set("param_threshold", rule.Params.Threshold)
-	d.Set("param_time_field", rule.Params.TimeField)
-	d.Set("param_time_window_size", rule.Params.TimeWindowSize)
-	d.Set("param_time_window_unit", rule.Params.TimeWindowUnit)
-	d.Set("rule_type_id", rule.RuleTypeID)
-	d.Set("schedule_interval", rule.Schedule.Interval)
-	d.Set("scheduled_task_id", rule.ScheduledTaskId)
-	d.Set("tags", rule.Tags)
-	d.Set("throttle", rule.Throttle)
-	d.Set("updated_at", rule.UpdatedAt)
-	d.Set("updated_by", rule.UpdatedBy)
+	_ = d.Set("actions", rule.Actions)
+	_ = d.Set("api_key_owner", rule.ApiKeyOwner)
+	_ = d.Set("consumer", rule.Consumer)
+	_ = d.Set("created_at", rule.CreatedAt)
+	_ = d.Set("created_by", rule.CreatedBy)
+	_ = d.Set("enabled", rule.Enabled)
+	_ = d.Set("last_execution_date", rule.ExecutionStatus.LastExecutionDate)
+	_ = d.Set("last_execution_status", rule.ExecutionStatus.Status)
+	_ = d.Set("id", rule.ID)
+	_ = d.Set("mute_all", rule.MuteAll)
+	_ = d.Set("muted_alert_ids", rule.MutedAlertIDs)
+	_ = d.Set("name", rule.Name)
+	_ = d.Set("notify_when", rule.NotifyWhen)
+	_ = d.Set("param_agg_field", rule.Params.AggField)
+	_ = d.Set("param_agg_type", rule.Params.AggType)
+	_ = d.Set("param_es_query", rule.Params.ESQuery)
+	_ = d.Set("param_group_by", rule.Params.GroupBy)
+	_ = d.Set("param_index", rule.Params.Index)
+	_ = d.Set("param_term_field", rule.Params.TermField)
+	_ = d.Set("param_term_size", rule.Params.TermSize)
+	_ = d.Set("param_threshold", rule.Params.Threshold)
+	_ = d.Set("param_time_field", rule.Params.TimeField)
+	_ = d.Set("param_time_window_size", rule.Params.TimeWindowSize)
+	_ = d.Set("param_time_window_unit", rule.Params.TimeWindowUnit)
+	_ = d.Set("rule_type_id", rule.RuleTypeID)
+	_ = d.Set("schedule_interval", rule.Schedule.Interval)
+	_ = d.Set("scheduled_task_id", rule.ScheduledTaskId)
+	_ = d.Set("tags", rule.Tags)
+	_ = d.Set("throttle", rule.Throttle)
+	_ = d.Set("updated_at", rule.UpdatedAt)
+	_ = d.Set("updated_by", rule.UpdatedBy)
 
 	return diags
 }
@@ -314,12 +317,15 @@ func resourceAlertingRuleUpdate(ctx context.Context, d *schema.ResourceData, m i
 	ruleID := d.Id()
 
 	// sets rule actions
-	actions := []gk.RuleAction{}
+	var actions []gk.RuleAction
 	if v, ok := d.GetOk("action"); ok && v.(*schema.Set).Len() > 0 {
 		for _, v := range v.(*schema.Set).List() {
 			v := v.(map[string]interface{})
 			var b map[string]interface{}
-			json.Unmarshal([]byte(v["params"].(string)), &b)
+			err := json.Unmarshal([]byte(v["params"].(string)), &b)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 			action := gk.RuleAction{
 				ID:     v["id"].(string),
 				Group:  v["group"].(string),
@@ -378,13 +384,13 @@ func resourceAlertingRuleUpdate(ctx context.Context, d *schema.ResourceData, m i
 		return diag.FromErr(err)
 	}
 	d.SetId(updatedRule.ID)
-	d.Set("last_updated", time.Now().Format(time.RFC850))
+	_ = d.Set("last_updated", time.Now().Format(time.RFC850))
 
 	// reads the updated rule and returns
 	return resourceAlertingRuleRead(ctx, d, m)
 }
 
-func resourceAlertingRuleDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAlertingRuleDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics // Warning or errors can be collected in a slice type
 	c := m.(*gk.Client)
 
