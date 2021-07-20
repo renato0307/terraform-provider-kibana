@@ -70,11 +70,10 @@ jobs:
         env:
           TF_ACC: "1"
           TF_ACC_TERRAFORM_VERSION: ${{ matrix.terraform }}
-
-          # Set whatever additional acceptance test env vars here. You can
-          # optionally use data from your repository secrets using the
-          # following syntax:
-          # SOME_VAR: ${{ secrets.SOME_VAR }}
+          KIBANA_PASSWORD: ${{ secrets.KIBANA_PASSWORD }}
+          KIBANA_SPACE: ${{ secrets.KIBANA_SPACE }}
+          KIBANA_URL: ${{ secrets.KIBANA_URL }}
+          KIBANA_USERNAME: ${{ secrets.KIBANA_USERNAME }}
 
         run: |
           go test -v -cover ./kibana
