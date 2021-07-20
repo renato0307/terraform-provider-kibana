@@ -15,7 +15,7 @@ func Provider() *schema.Provider {
 			"host": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("KIBANA_HOST", nil),
+				DefaultFunc: schema.EnvDefaultFunc("KIBANA_URL", nil),
 			},
 			"username": {
 				Type:        schema.TypeString,
@@ -32,7 +32,7 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				DefaultFunc: schema.EnvDefaultFunc("SPACE_PASSWORD", nil),
+				DefaultFunc: schema.EnvDefaultFunc("KIBANA_SPACE", nil),
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
@@ -48,7 +48,7 @@ func Provider() *schema.Provider {
 	}
 }
 
-func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+func providerConfigure(_ context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
 	space := d.Get("space").(string)

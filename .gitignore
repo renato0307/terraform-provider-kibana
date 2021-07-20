@@ -18,3 +18,5 @@ terraform-provider-kibana
 *hcl
 .terraform
 *tfstate*
+
+.idea
