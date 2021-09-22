@@ -3,7 +3,7 @@ HOSTNAME=renatoalvestorres.net
 NAMESPACE=terraform
 NAME=kibana
 BINARY=terraform-provider-${NAME}
-VERSION=0.0.5
+VERSION=0.0.6
 OS_ARCH=linux_amd64
 
 default: install
